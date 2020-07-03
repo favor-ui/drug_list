@@ -10,7 +10,7 @@ drugs = mongo.db.drugs
 def require_key(view_function):
     @wraps(view_function)
     def decorated_function(*args, **kwargs):
-        if request.args.get('x-drug-key') and request.args.get('x-drug-key') == os.environ.get('DRUG_KEY'):
+        if request.args.get('x-drug-key') and request.args.get('x-drug-key') == os.environ.get('DRUG_KE'):
             return view_function(*args, **kwargs)
         else:
             return make_response(jsonify({"message": "Unauthorized access at " + request.url, "status": False}), 403)
@@ -21,19 +21,34 @@ class AddDrugs(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('name', type=str, required=True, help="This field cannot be left blank")
     parser.add_argument('price', type=str, required=True, help="This field cannot be left blank")
+    parser.add_argument('dosage', type=str, required=True, help="This field cannot be left blank")
+    parser.add_argument('strength', type=str, required=True, help="This field cannot be left blank")
+    parser.add_argument('presentation', type=str, required=True, help="This field cannot be left blank")
 
     @require_key
     def post(self):
         data = AddDrugs.parser.parse_args()
         if ' '.join(data['name'].split()) == '':
-            return {"message": "stakeholder field cannot be empty", "status": False}, 404
+            return {"message": "name field cannot be empty", "status": False}, 404
         elif ' '.join(data['price'].split()) == '':
-            return {"message": "stakeholder field cannot be empty", "status": False}, 404
+            return {"message": "price field cannot be empty", "status": False}, 404
+        elif ' '.join(data['dosage'].split()) == '':
+            return {"message": "dosage field cannot be empty", "status": False}, 404
+        elif ' '.join(data['strength'].split()) == '':
+            return {"message": "strength field cannot be empty", "status": False}, 404
+        elif ' '.join(data['presentation'].split()) == '':
+            return {"message": "presentation field cannot be empty", "status": False}, 404
         else:
-            if drugs.find_one({"name": data['name'].lower()}):
-                return {"message": "drug name {} already exists".format(data['name']), "status": False}, 404
+            if drugs.find_one({"name": data['name'].lower(), "dosage": data['dosage']}):
+                return {"message": "drug {} already exists".format(data['name']), "status": False}, 404
             else:
-                all_drugs = {"name": data['name'].lower(), "price": data['price']}
+                all_drugs = {
+                    "name": data['name'].lower(), 
+                    "dosage": data['dosage'], 
+                    "strength": data['strength'], 
+                    "presentation": data['presentation'], 
+                    "price": data['price']
+                    }
                 drugs.insert(all_drugs)
                 return {"message": "NGN{} {} added successfully".format(data['price'], data['name'].title()), "status": True}, 200
 
@@ -85,6 +100,7 @@ api.add_resource(GetAllDrugs, '/getalldrugs')
 class UpdateDrug(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('name', type=str, required=True, help="This field cannot be left blank")
+    parser.add_argument('strength', type=str, required=True, help="This field cannot be left blank")
     parser.add_argument('price', type=str, required=True, help="This field cannot be left blank")
 
     @require_key
@@ -93,11 +109,13 @@ class UpdateDrug(Resource):
         if ' '.join(data['name'].split()) == '':
             return {"message": "name field cannot be empty", "status": False}, 404
         elif ' '.join(data['price'].split()) == '':
-            return {"message": "price already the same", "status": False}, 404
+            return {"message": "price cannot be empty", "status": False}, 404
+        elif ' '.join(data['strength'].split()) == '':
+            return {"message": "strength cannot be empty", "status": False}, 404
         elif int(data['price']) < 1:
             return {"message": "invalid price", "status": False}, 404
         else:
-            d = drugs.find_one({"name": data['name'].lower()})
+            d = drugs.find_one({"name": data['name'].lower(), "strength": data['strength']})
             if not d:
                 return {"message": "{} does not exist".format(data['name']), "status": False}, 404
             elif d['price'] == data['price']:
