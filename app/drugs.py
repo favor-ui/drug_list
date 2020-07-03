@@ -66,13 +66,17 @@ class GetADrug(Resource):
         if ' '.join(data['name'].split()) == '':
             return {"message": "name field cannot be empty", "status": False}, 404
         else:
-            d = drugs.find_one({"name": data['name'].lower()})
+            d = drugs.find({"name": data['name'].lower()})
+            out = []
+            
             if not d:
                 return {"message": " {} does not exists".format(data['name']), "status": False}, 404
             else:
+                for s in d:
+                    out.append({"name": s["name"], "dosage": s["dosage"], "strength": s['strength'], "presentation": s['presentation'], "price": s['price']})
                 return {
-                    "name": d['name'].title(),
-                    "price": "NGN"+d['price'],
+                    "count": d.count(),
+                    "data": out,
                     "status": True
                 }, 200
 
