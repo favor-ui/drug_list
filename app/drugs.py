@@ -39,7 +39,7 @@ class AddDrugs(Resource):
         elif ' '.join(data['presentation'].split()) == '':
             return {"message": "presentation field cannot be empty", "status": False}, 404
         else:
-            if drugs.find_one({"name": data['name'].lower(), "dosage": data['dosage']}):
+            if drugs.find_one({"name": data['name'].lower(), "dosage": data['dosage'], "price":data['price'], "strength": data['strength']}):
                 return {"message": "drug {} already exists".format(data['name']), "status": False}, 404
             else:
                 all_drugs = {
