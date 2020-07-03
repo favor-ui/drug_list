@@ -10,7 +10,7 @@ drugs = mongo.db.drugs
 def require_key(view_function):
     @wraps(view_function)
     def decorated_function(*args, **kwargs):
-        if request.args.get('x-drug-key') and request.args.get('x-drug-key') == "drug-key-key":
+        if request.args.get('x-drug-key') and request.args.get('x-drug-key') == os.environ.get('DRUG_KEY'):
             return view_function(*args, **kwargs)
         else:
             return make_response(jsonify({"message": "Unauthorized access at " + request.url, "status": False}), 403)
